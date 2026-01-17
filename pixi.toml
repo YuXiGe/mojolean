@@ -29,6 +29,7 @@ git = "*"
 libblas = ">=3.9.0"
 liblapack = ">=3.9.0"
 liblapacke = ">=3.9.0"  # これが cblas.h などのヘッダーを提供します
+clang = ">=21.1.8,<22"
 
 
 [system-requirements]
