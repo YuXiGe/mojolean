@@ -1,15 +1,8 @@
--- src/SimpleOracle.lean
+import SciLean
 
--- 初期化関数の名前を固定する
-@[export initialize_SimpleOracle]
-def initialize_SimpleOracle : IO Unit := do
-  return ()
-
--- 監査関数の名前を固定する
+-- Float (64bit double) を受け取り、Float を返すだけの純粋な関数
+-- これなら Lean ランタイムが未初期化でも動作する可能性が極めて高いです
 @[export validate_physics]
-def validate_physics (k s1 s2 alpha thrust g : Float) : Float :=
-  -- 前回のロジックをここに配置
-  if k * (s1 + s2) < 25000.0 then 0.0
-  else if alpha > 20.0 && thrust < 40.0 then 2.0
-  else if thrust > 85.0 && g > 5.0 then 3.0
-  else 1.0
+def validate_physics (thrust : Float) (g : Float) : Float :=
+  -- SciLean の計算を入れる前に、まずこれが通るか確認
+  thrust / g

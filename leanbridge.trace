@@ -1,0 +1,11 @@
+{"log":
+ [{"message":
+   ".> cc -c -o leanbridge /home/ubuntu/Desktop/workspace/playground/YuXiGe/Aquatones-ALETHEIA/src/bridge.c -fPIC -I.pixi/envs/default/include -I/home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1/include",
+   "level": "trace"}],
+ "inputs":
+ [["/home/ubuntu/Desktop/workspace/playground/YuXiGe/Aquatones-ALETHEIA/src/bridge.c",
+   "6211928145243055013"],
+  ["x86_64-unknown-linux-gnu", "6026072021563112488"],
+  ["traceArgs: #[]", "1723"],
+  ["<nil>", "1723"]],
+ "depHash": "10727991123757978474"}

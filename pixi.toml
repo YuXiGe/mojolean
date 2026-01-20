@@ -5,8 +5,7 @@ channels = ["https://conda.modular.com/max", "conda-forge", "nvidia"]
 platforms = ["linux-64"]
 
 [dependencies]
-# 論理層: SciLean のビルドに必要な行列計算ライブラリ
-openblas = ">=0.3.20"
+openblas = ">=0.3.31,<0.4"
 libgomp = "*"
 modular = ">=25.1"
 python = "3.10.*"
@@ -16,35 +15,33 @@ gxx_linux-64 = "11.*"
 matplotlib = ">=3.10.8,<4"
 h5py = ">=3.15.1,<4"
 
-# 計算層: CUDA C++ (H100 / Hopperアーキテクチャ)
-cuda-toolkit = ">=12.0"
-cuda-nvcc = ">=12.0"
-cuda-version = "12.9.*"
-
 # 開発・ビルドツール
 make = "*"
 cmake = "*"
 gcc = ">=11"
 git = "*"
+wget = "*"  # LeanDojo の要件
 libblas = ">=3.11.0,<4"
 liblapack = ">=3.9.0"
-liblapacke = ">=3.9.0"  # これが cblas.h などのヘッダーを提供します
+liblapacke = ">=3.9.0"
 clang = ">=21.1.8,<22"
 libcblas = ">=3.11.0,<4"
 
-
-[system-requirements]
-cuda = "12.9"
+# LeanDojo を PyPI 経由で追加
+[pypi-dependencies]
+lean-dojo = "*"
 
 [tasks]
-# CUDAビルド
-build-cuda = "nvcc -Xcompiler -fPIC -shared -arch=sm_90 cuda/src/kernel.cu -o mojo/libvoxel_cuda.so"
+build-cuda = "echo 'CUDA kernel not found, skipping CUDA build...'"
 
-# SciLean 本体のビルド (BLASのパスを明示的に注入)
-build-scilean = { cmd = "lake build", cwd = "SciLean", env = { C_INCLUDE_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/include", LIBRARY_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/lib", LDFLAGS = "-L$PIXI_PROJECT_ROOT/.pixi/envs/default/lib", CFLAGS = "-I$PIXI_PROJECT_ROOT/.pixi/envs/default/include" } }
+# 1. SciLean 本体と依存関係を共有ライブラリとしてビルド
+build-scilean = { cmd = "lake build SciLean:shared", cwd = "SciLean", env = { C_INCLUDE_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/include", LIBRARY_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/lib" } }
 
-# 監査エンジンのビルド
-build-lean = { cmd = "lake build PhysicsOracle:shared", cwd = "physics_engine", env = { C_INCLUDE_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/include", LIBRARY_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/lib", LD_LIBRARY_PATH = "$HOME/.elan/toolchains/leanprover--lean4---v4.20.1/lib/lean:$PIXI_PROJECT_ROOT/.pixi/envs/default/lib" } }
+# 2. 監査エンジンのビルド
+build-lean = { cmd = "lake build PhysicsOracle:shared", env = { C_INCLUDE_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/include", LIBRARY_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/lib" } }
 
-# 全体の実行
-run = "pixi run build-cuda && pixi run build-scilean && pixi run build-lean && mojo mojo/main.mojo"
+# 3. 快速再結合
+post-link = { cmd = "mkdir -p build && ALL_LIBS=$(find SciLean/.lake -name 'lib*.so' | sort -u | tr '\\n' ' ') && echo \"Linking with all dependencies: $ALL_LIBS\" && clang -shared -o ./build/libPhysicsOracle.so .lake/build/ir/SimpleOracle.c.o.export $ALL_LIBS -L $HOME/.elan/toolchains/leanprover--lean4---v4.20.1/lib/lean -L $PIXI_PROJECT_ROOT/.pixi/envs/default/lib -lleanshared -lopenblas -fPIC -rdynamic" }
+
+# 4. 実行フロー
+run = { cmd = "pixi run build-scilean && pixi run build-lean && pixi run post-link && mojo -I . examples/flight_audit.mojo", env = { LD_LIBRARY_PATH = "$HOME/.elan/toolchains/leanprover--lean4---v4.20.1/lib/lean:$PIXI_PROJECT_ROOT/.pixi/envs/default/lib:$(pwd)/build:$(find SciLean/.lake -type d -name 'lib' | tr '\\n' ':')" } }

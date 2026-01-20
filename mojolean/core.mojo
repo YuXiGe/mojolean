@@ -1,27 +1,27 @@
-from python import Python, PythonObject
+from sys.ffi import external_call
+from memory import LegacyOpaquePointer as OpaquePointer
 
-struct AletheiaBridge:
-    var lib: PythonObject
-    var ctypes: PythonObject
+struct LeanLibrary:
+    var _handle: OpaquePointer
 
-    fn __init__(out self: Self, so_path: String, module_name: String) raises:
-        self.ctypes = Python.import_module("ctypes")
-        self.lib = self.ctypes.CDLL(so_path)
+    fn __init__(out self):
+        var path = "./build/libPhysicsOracle.so"
+        self._handle = external_call["dlopen", OpaquePointer](path.unsafe_cstr_ptr(), 258)
         
-        var init_func_name = "initialize_" + module_name
-        var init_func = self.lib.__getattr__(init_func_name)
-        init_func.argtypes = [self.ctypes.c_uint8, self.ctypes.c_void_p]
-        init_func(0, None)
-        print("✅ Mojolean: Lean Runtime (" + init_func_name + ") Initialized.")
+        if not self._handle:
+            print("❌ Failed to load libPhysicsOracle.so")
+        else:
+            # 初期化関数をあえて呼ばない
+            print("✅ Physics Oracle Binary Loaded (Pure Mode)")
 
-    # 戻り値を PythonObject に変更
-    fn call_audit(self, k: Float64, s1: Float64, s2: Float64, alpha: Float64, thrust: Float64, g: Float64) raises -> PythonObject:
-        var func = self.lib.__getattr__("validate_physics")
-        func.argtypes = [
-            self.ctypes.c_double, self.ctypes.c_double, self.ctypes.c_double,
-            self.ctypes.c_double, self.ctypes.c_double, self.ctypes.c_double
-        ]
-        func.restype = self.ctypes.c_double
+    fn audit_flight(mut self, thrust: Float64, g: Float64) -> Float64:
+        alias FuncType = fn(Float64, Float64) -> Float64
+        var symbol = "validate_physics" 
+        var ptr = external_call["dlsym", OpaquePointer](self._handle, symbol.unsafe_cstr_ptr())
         
-        # Leanからの結果（1.0, 0.0等）をそのまま返す
-        return func(k, s1, s2, alpha, thrust, g)
+        if not ptr:
+            print("❌ Symbol not found: " + symbol)
+            return -1.0
+            
+        var f = ptr.bitcast[FuncType]()[]
+        return f(thrust, g)

@@ -1,0 +1,11 @@
+{"log":
+ [{"message":
+   ".> /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1/bin/clang -shared -o leanbridge.so -Wl,--whole-archive leanbridge -Wl,--no-whole-archive -L.pixi/envs/default/lib -lopenblas -rdynamic -L /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1/lib/lean --sysroot /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1 -L /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1/lib -L /home/ubuntu/.elan/toolchains/leanprover--lean4---v4.20.1/lib/glibc -lc -lc_nonshared -Wl,--as-needed -l:ld.so -Wl,--no-as-needed -lpthread_nonshared -Wl,--as-needed -Wl,-Bstatic -lgmp -lunwind -luv -Wl,-Bdynamic -Wl,--no-as-needed -fuse-ld=lld -Wl,-Bstatic -lc++ -lc++abi -Wl,-Bdynamic -Wl,--as-needed -lLake_shared -Wl,--no-as-needed -Wl,-Bsymbolic -Wl,--as-needed -lgmp -luv -lpthread -ldl -lrt -Wl,--no-as-needed -lm -ldl -pthread",
+   "level": "trace"}],
+ "inputs":
+ [["leanbridge", "16865051205764732648"],
+  ["Lean 4.20.0, commit b02228b03f655c0cd051d82280ad5758359ec8ba",
+   "309479851529972037"],
+  ["pure: #[]", "1723"],
+  ["x86_64-unknown-linux-gnu", "6026072021563112488"]],
+ "depHash": "10359746786636981390"}
